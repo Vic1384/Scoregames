@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ScoreLudik Pro</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --card-border: #334155;
+            --text: #f8fafc;
+            --text-light: #94a3b8;
+            --primary: #6366f1;
+            --success: #10b981;
+            --danger: #f43f5e;
+            
+            --skyjo: linear-gradient(135deg, #0ea5e9, #0369a1);
+            --nimmt: linear-gradient(135deg, #f59e0b, #b45309);
+            --wonders: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            --belote: linear-gradient(135deg, #ec4899, #be185d);
+            --scrabble: linear-gradient(135deg, #10b981, #047857);
+            --uno: linear-gradient(135deg, #f43f5e, #be123c);
+            --president: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            --dixit: linear-gradient(135deg, #d946ef, #a21caf);
+            --ascenseur: linear-gradient(135deg, #14b8a6, #0f766e);
+            --barbu: linear-gradient(135deg, #f97316, #c2410c);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+
+        body { background-color: var(--bg); color: var(--text); padding: 15px; max-width: 600px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
+
+        header { text-align: center; margin-bottom: 20px; padding-top: 10px; }
+        header h1 { font-size: 1.75rem; background: linear-gradient(135deg, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; letter-spacing: -0.5px; }
+
+        .card { background: var(--card-bg); border-radius: 20px; padding: 20px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); margin-bottom: 15px; border: 1px solid var(--card-border); }
+
+        .view { display: none; flex-direction: column; gap: 15px; }
+        .view.active { display: flex; }
+
+        h2 { font-size: 1.1rem; margin-bottom: 12px; color: var(--text); font-weight: 700; }
+        label { font-size: 0.8rem; font-weight: 600; color: var(--text-light); display: block; margin-bottom: 4px; }
+        
+        input, select { width: 100%; padding: 14px; border: 1px solid var(--card-border); border-radius: 12px; font-size: 1rem; outline: none; background: #0f172a; color: white; margin-bottom: 10px; }
+        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
+
+        .btn { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 14px; font-size: 1rem; font-weight: 700; cursor: pointer; width: 100%; text-align: center; box-shadow: 0 4px 12px rgba(99, 102, 241,.4); transition: transform 0.1s; }
+        .btn:active { transform: scale(0.97); }
+        .btn-danger { background: var(--danger); box-shadow: 0 4px 12px rgba(244, 63, 94, 0.4); }
+        .btn-secondary { background: #334155; color: #cbd5e1; box-shadow: none; }
+        .btn-success { background: var(--success); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); }
+
+        .game-selector { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+        .game-pill { padding: 14px 10px; border-radius: 14px; background: #0f172a; font-weight: 700; font-size: 0.9rem; cursor: pointer; text-align: center; color: var(--text-light); border: 2px solid var(--card-border); transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .game-pill.active { border-color: transparent; color: white; box-shadow: 0 6px 15px rgba(0,0,0,0.4); transform: translateY(-2px); }
+        
+        .game-pill.active[data-game="skyjo"] { background: var(--skyjo); }
+        .game-pill.active[data-game="nimmt"] { background: var(--nimmt); }
+        .game-pill.active[data-game="wonders"] { background: var(--wonders); }
+        .game-pill.active[data-game="belote"] { background: var(--belote); }
+        .game-pill.active[data-game="scrabble"] { background: var(--scrabble); }
+        .game-pill.active[data-game="uno"] { background: var(--uno); }
+        .game-pill.active[data-game="president"] { background: var(--president); }
+        .game-pill.active[data-game="dixit"] { background: var(--dixit); }
+        .game-pill.active[data-game="ascenseur"] { background: var(--ascenseur); }
+        .game-pill.active[data-game="barbu"] { background: var(--barbu); }
+
+        .player-input-row { display: flex; gap: 8px; margin-bottom: 8px; }
+        .player-input-row input { margin-bottom: 0; }
+        .btn-icon { width: 48px; flex-shrink: 0; background: rgba(244, 63, 94, 0.15); color: var(--danger); border: 1px solid rgba(244, 63, 94, 0.3); border-radius: 12px; font-weight: bold; cursor: pointer; }
+
+        .score-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .badge-game { display: inline-block; padding: 8px 16px; border-radius: 30px; font-size: 0.95rem; font-weight: 800; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        
+        .badge-skyjo { background: var(--skyjo); }
+        .badge-nimmt { background: var(--nimmt); }
+        .badge-wonders { background: var(--wonders); }
+        .badge-belote { background: var(--belote); }
+        .badge-scrabble { background: var(--scrabble); }
+        .badge-uno { background: var(--uno); }
+        .badge-president { background: var(--president); }
+        .badge-dixit { background: var(--dixit); }
+        .badge-ascenseur { background: var(--ascenseur); }
+        .badge-barbu { background: var(--barbu); }
+
+        .player-score-card { background: #0f172a; padding: 16px; border-radius: 16px; margin-bottom: 12px; border: 1px solid var(--card-border); display: flex; flex-direction: column; gap: 8px; }
+        .player-row-top { display: flex; justify-content: space-between; align-items: center; }
+        .p-name { font-weight: 700; font-size: 1.1rem; color: #f1f5f9; }
+        .p-score { font-size: 1.5rem; font-weight: 900; color: #818cf8; }
+
+        .controls-standard { display: flex; gap: 6px; align-items: center; justify-content: flex-end; }
+        .score-btn { width: 40px; height: 40px; border-radius: 10px; border: none; font-size: 1rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .score-btn.plus { background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .score-btn.minus { background: rgba(244, 63, 94, 0.15); color: var(--danger); border: 1px solid rgba(244, 63, 94, 0.3); }
+
+        .belote-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; background: #1e293b; border-radius: 12px; overflow: hidden; border: 1px solid var(--card-border); }
+        .belote-table th, .belote-table td { padding: 10px 12px; text-align: center; border-bottom: 1px solid var(--card-border); }
+        .belote-table th { background: #0f172a; font-weight: 700; color: var(--text-light); }
+        .belote-table tr:last-child td { border-bottom: none; }
+
+        /* Grilles multi-critères (7 Wonders & Barbu) */
+        .cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 5px; }
+        .cat-input-group { background: #1e293b; padding: 8px; border-radius: 10px; border: 1px solid var(--card-border); text-align: center; }
+        .cat-input-group label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; margin-bottom: 2px; color: var(--text-light); }
+        .cat-input-group input { width: 100%; padding: 4px; text-align: center; font-size: 0.95rem; border: none; font-weight: bold; margin-bottom: 0; background: transparent; color: white; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; backdrop-filter: blur(8px); }
+        .modal-overlay.active { display: flex; }
+        .modal { background: #1e293b; border: 1px solid var(--card-border); padding: 24px; border-radius: 24px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
+        .modal h3 { margin-bottom: 10px; font-size: 1.25rem; }
+        .modal p { color: var(--text-light); font-size: 0.9rem; margin-bottom: 20px; }
+        .modal-buttons { display: flex; flex-direction: column; gap: 10px; }
+
+        .actions-bottom { display: flex; gap: 10px; margin-top: 15px; }
+        .subline { font-size: 0.75rem; color: var(--text-light); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>ScoreLudik Pro</h1>
+    </header>
+
+    <!-- VUE 1 : CONFIGURATION -->
+    <div id="setupView" class="view active">
+        <div class="card">
+            <h2>Choisissez un jeu</h2>
+            <div class="game-selector">
+                <div class="game-pill active" data-game="skyjo" onclick="cliquerSurJeu('skyjo')">🃏 Skyjo</div>
+                <div class="game-pill" data-game="nimmt" onclick="cliquerSurJeu('nimmt')">🐂 6 qui prend</div>
+                <div class="game-pill" data-game="wonders" onclick="cliquerSurJeu('wonders')">🏛️ 7 Wonders</div>
+                <div class="game-pill" data-game="belote" onclick="cliquerSurJeu('belote')">🎯 Belote</div>
+                <div class="game-pill" data-game="scrabble" onclick="cliquerSurJeu('scrabble')">🔠 Scrabble</div>
+                <div class="game-pill" data-game="uno" onclick="cliquerSurJeu('uno')">🚫 Uno</div>
+                <div class="game-pill" data-game="president" onclick="cliquerSurJeu('president')">👑 Président</div>
+                <div class="game-pill" data-game="dixit" onclick="cliquerSurJeu('dixit')">✨ Dixit</div>
+                <div class="game-pill" data-game="ascenseur" onclick="cliquerSurJeu('ascenseur')">📈 Ascenseur</div>
+                <div class="game-pill" data-game="barbu" onclick="cliquerSurJeu('barbu')">🧔 Barbu</div>
+            </div>
+
+            <h2 id="labelConfigJoueurs">Participants</h2>
+            <div id="playersInputsContainer"></div>
+            <button class="btn btn-secondary" onclick="ajouterChampJoueur()" style="margin-top: 5px; margin-bottom: 15px;">+ Ajouter</button>
+
+            <button class="btn" onclick="lancerLaPartie()">Démarrer la partie</button>
+        </div>
+    </div>
+
+    <!-- VUE 2 : COMPTEUR EN COURS -->
+    <div id="gameView" class="view">
+        <div class="card">
+            <div class="score-header">
+                <span id="badgeGameType" class="badge-game badge-skyjo">Skyjo</span>
+                <button class="btn btn-secondary" onclick="retourAccueil()" style="width: auto; padding: 8px 14px; font-size: 0.85rem;">← Jeux</button>
+            </div>
+
+            <div id="playersScoreContainer"></div>
+
+            <div class="actions-bottom">
+                <button class="btn btn-success" onclick="ouvrirSaisieTour()" id="btnActionManche">+ Ajouter une manche / tour</button>
+                <button class="btn btn-danger" onclick="reinitialiserScores()" style="font-size: 0.9rem; padding: 12px;">Réinitialiser</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE SAISIE MANCHE / TOUR -->
+    <div id="tourModal" class="modal-overlay">
+        <div class="modal">
+            <h3 id="tourModalTitle">Saisir les points</h3>
+            <p id="tourModalSub" class="subline">Entrez les données de ce tour</p>
+            <div id="tourInputsContainer" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; text-align: left;"></div>
+            <div class="modal-buttons">
+                <button class="btn" onclick="validerSaisieTour()">Valider et ajouter</button>
+                <button class="btn btn-secondary" onclick="fermerModalTour()" style="background:transparent; color:var(--text); border:1px solid var(--card-border);">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE REPRENDRE / NOUVELLE PARTIE -->
+    <div id="choiceModal" class="modal-overlay">
+        <div class="modal">
+            <h3 id="modalTitle">Partie en cours</h3>
+            <p id="modalGameInfo">Que souhaitez-vous faire ?</p>
+            <div class="modal-buttons">
+                <button class="btn" onclick="reprendrePartieExistante()">Reprendre la partie</button>
+                <button class="btn btn-danger" onclick="nouvellePartie()">Nouvelle partie (Zéro)</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'scoreludik_pro_barbu_v3';
+
+        const NOMS_JEUX = {
+            skyjo: 'Skyjo',
+            nimmt: '6 qui prend !',
+            wonders: '7 Wonders',
+            belote: 'La Belote',
+            scrabble: 'Scrabble',
+            uno: 'Uno',
+            president: 'Le Président',
+            dixit: 'Dixit',
+            ascenseur: 'L’Ascenseur',
+            barbu: 'Le Barbu'
+        };
+
+        let donneesJeux = {
+            skyjo: { enCours: false, players: [{ name: "Joueur 1", score: 0, historique: [] }, { name: "Joueur 2", score: 0, historique: [] }] },
+            nimmt: { enCours: false, players: [{ name: "Joueur 1", score: 0, historique: [] }, { name: "Joueur 2", score: 0, historique: [] }] },
+            wonders: { enCours: false, players: [{ name: "Joueur 1", categories: { m:0, c:0, s:0, mil:0, g:0, p:0 } }, { name: "Joueur 2", categories: { m:0, c:0, s:0, mil:0, g:0, p:0 } }] },
+            belote: { enCours: false, players: [{ name: "Équipe Nous", score: 0, historique: [] }, { name: "Équipe Eux", score: 0, historique: [] }] },
+            scrabble: { enCours: false, players: [{ name: "Joueur 1", score: 0, historique: [] }, { name: "Joueur 2", score: 0, historique: [] }] },
+            uno: { enCours: false, players: [{ name: "Joueur 1", score: 0, historique: [] }, { name: "Joueur 2", score: 0, historique: [] }] },
+            president: { enCours: false, players: [{ name: "Joueur 1", score: 0, historique: [] }, { name: "Joueur 2", score: 0, historique: [] }] },
+            dixit: { enCours: false, players: [{ name: "Joueur 1", score: 0, historique: [] }, { name: "Joueur 2", score: 0, historique: [] }] },
+            ascenseur: { enCours: false, players: [{ name: "Joueur 1", score: 0, historique: [] }, { name: "Joueur 2", score: 0, historique: [] }] },
+            barbu: { 
+                enCours: false, 
+                players: [
+                    { name: "Joueur 1", barbuCats: { plis:0, coeurs:0, dames:0, roi:0, dernier:0, reussite:0 } }, 
+                    { name: "Joueur 2", barbuCats: { plis:0, coeurs:0, dames:0, roi:0, dernier:0, reussite:0 } }
+                ] 
+            }
+        };
+
+        let jeuSelectionne = 'skyjo';
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (parsed.skyjo && parsed.barbu) donneesJeux = parsed;
+                } catch (e) {}
+            }
+            afficherInputsJoueurs();
+            verifierPartieEnCours(jeuSelectionne);
+        });
+
+        function sauvegarder() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(donneesJeux));
+        }
+
+        function cliquerSurJeu(type) {
+            jeuSelectionne = type;
+            document.querySelectorAll('.game-pill').forEach(pill => {
+                pill.classList.toggle('active', pill.dataset.game === type);
+            });
+            
+            const lbl = document.getElementById('labelConfigJoueurs');
+            if (type === 'belote') lbl.innerText = "Équipes";
+            else lbl.innerText = "Participants";
+
+            afficherInputsJoueurs();
+            verifierPartieEnCours(type);
+        }
+
+        function verifierPartieEnCours(type) {
+            if (donneesJeux[type].enCours) {
+                document.getElementById('modalTitle').innerText = NOMS_JEUX[type];
+                document.getElementById('modalGameInfo').innerText = `Une partie avec ${donneesJeux[type].players.length} participants est enregistrée.`;
+                document.getElementById('choiceModal').classList.add('active');
+            }
+        }
+
+        function reprendrePartieExistante() {
+            document.getElementById('choiceModal').classList.remove('active');
+            ouvrirEcranJeu();
+        }
+
+        function nouvellePartie() {
+            document.getElementById('choiceModal').classList.remove('active');
+            donneesJeux[jeuSelectionne].enCours = false;
+            let defaultNames = jeuSelectionne === 'belote' ? ["Équipe Nous", "Équipe Eux"] : ["Joueur 1", "Joueur 2"];
+            donneesJeux[jeuSelectionne].players = defaultNames.map(name => ({
+                name: name,
+                score: 0,
+                historique: [],
+                categories: { m:0, c:0, s:0, mil:0, g:0, p:0 },
+                barbuCats: { plis:0, coeurs:0, dames:0, roi:0, dernier:0, reussite:0 }
+            }));
+            sauvegarder();
+            afficherInputsJoueurs();
+        }
+
+        function afficherInputsJoueurs() {
+            const container = document.getElementById('playersInputsContainer');
+            container.innerHTML = '';
+            const players = donneesJeux[jeuSelectionne].players;
+
+            players.forEach((p, index) => {
+                const row = document.createElement('div');
+                row.className = 'player-input-row';
+                let defName = jeuSelectionne === 'belote' ? `Équipe ${index + 1}` : `Participant ${index + 1}`;
+                row.innerHTML = `
+                    <input type="text" value="${escapeHtml(p.name)}" placeholder="${defName}" oninput="donneesJeux[jeuSelectionne].players[${index}].name = this.value">
+                    ${players.length > (jeuSelectionne === 'belote' ? 2 : 1) ? `<button class="btn-icon" onclick="supprimerJoueur(${index})">✕</button>` : ''}
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function ajouterChampJoueur() {
+            const players = donneesJeux[jeuSelectionne].players;
+            if (jeuSelectionne === 'belote' && players.length >= 2) {
+                alert("La belote se joue à 2 équipes.");
+                return;
+            }
+            players.push({
+                name: jeuSelectionne === 'belote' ? `Équipe ${players.length + 1}` : `Participant ${players.length + 1}`,
+                score: 0,
+                historique: [],
+                categories: { m:0, c:0, s:0, mil:0, g:0, p:0 },
+                barbuCats: { plis:0, coeurs:0, dames:0, roi:0, dernier:0, reussite:0 }
+            });
+            afficherInputsJoueurs();
+        }
+
+        function supprimerJoueur(index) {
+            const players = donneesJeux[jeuSelectionne].players;
+            if (players.length > (jeuSelectionne === 'belote' ? 2 : 1)) {
+                players.splice(index, 1);
+                afficherInputsJoueurs();
+            }
+        }
+
+        function lancerLaPartie() {
+            donneesJeux[jeuSelectionne].players.forEach((p, i) => {
+                if (!p.name || !p.name.trim()) p.name = `Participant ${i + 1}`;
+            });
+            donneesJeux[jeuSelectionne].enCours = true;
+            sauvegarder();
+            ouvrirEcranJeu();
+        }
+
+        function ouvrirEcranJeu() {
+            document.getElementById('setupView').classList.remove('active');
+            document.getElementById('gameView').classList.add('active');
+
+            const badge = document.getElementById('badgeGameType');
+            const btnManche = document.getElementById('btnActionManche');
+
+            badge.className = 'badge-game badge-' + jeuSelectionne;
+            badge.innerText = NOMS_JEUX[jeuSelectionne];
+
+            if (jeuSelectionne === 'wonders' || jeuSelectionne === 'barbu') {
+                btnManche.style.display = 'none';
+            } else {
+                btnManche.style.display = 'block';
+                if (jeuSelectionne === 'skyjo') btnManche.innerText = '+ Saisir une manche Skyjo';
+                else if (jeuSelectionne === 'nimmt') btnManche.innerText = '+ Saisir les têtes de bœuf';
+                else if (jeuSelectionne === 'belote') btnManche.innerText = '+ Saisir une donne';
+                else if (jeuSelectionne === 'scrabble') btnManche.innerText = '+ Ajouter des points de mot';
+                else if (jeuSelectionne === 'uno') btnManche.innerText = '+ Fin de manche (Pénalités)';
+                else if (jeuSelectionne === 'president') btnManche.innerText = '+ Saisir une manche Président';
+                else if (jeuSelectionne === 'dixit') btnManche.innerText = '+ Saisir les points Dixit';
+                else if (jeuSelectionne === 'ascenseur') btnManche.innerText = '+ Saisir un tour Ascenseur';
+            }
+
+            afficherScores();
+        }
+
+        function retourAccueil() {
+            document.getElementById('gameView').classList.remove('active');
+            document.getElementById('setupView').classList.add('active');
+            afficherInputsJoueurs();
+        }
+
+        function afficherScores() {
+            const container = document.getElementById('playersScoreContainer');
+            container.innerHTML = '';
+            const players = donneesJeux[jeuSelectionne].players;
+
+            if (jeuSelectionne === 'belote') {
+                let tableHtml = `
+                    <div class="player-score-card">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                            <div><strong>${escapeHtml(players[0].name)}</strong><br><span style="font-size:1.5rem; font-weight:900; color:#818cf8;">${players[0].score} pts</span></div>
+                            <div style="text-align:right;"><strong>${escapeHtml(players[1].name)}</strong><br><span style="font-size:1.5rem; font-weight:900; color:#818cf8;">${players[1].score} pts</span></div>
+                        </div>
+                        <h4 style="font-size:0.85rem; color:var(--text-light); margin-top:5px; margin-bottom:5px;">Historique des donnes :</h4>
+                        <table class="belote-table">
+                            <thead>
+                                <tr><th>Donne</th><th>${escapeHtml(players[0].name)}</th><th>${escapeHtml(players[1].name)}</th></tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                let nbDonnes = Math.max(players[0].historique.length, players[1].historique.length);
+                if (nbDonnes === 0) {
+                    tableHtml += `<tr><td colspan="3" style="color:var(--text-light); padding:12px;">Aucune donne enregistrée</td></tr>`;
+                } else {
+                    for (let i = 0; i < nbDonnes; i++) {
+                        tableHtml += `<tr>
+                            <td>#${i+1}</td>
+                            <td>${players[0].historique[i] !== undefined ? players[0].historique[i] : '-'}</td>
+                            <td>${players[1].historique[i] !== undefined ? players[1].historique[i] : '-'}</td>
+                        </tr>`;
+                    }
+                }
+                tableHtml += `</tbody></table></div>`;
+                container.innerHTML = tableHtml;
+
+            } else {
+                players.forEach((p, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'player-score-card';
+
+                    if (jeuSelectionne === 'wonders') {
+                        const c = p.categories || { m:0, c:0, s:0, mil:0, g:0, p:0 };
+                        card.innerHTML = `
+                            <div class="player-row-top">
+                                <div class="p-name">${escapeHtml(p.name)}</div>
+                                <div class="p-score" id="score-total-${index}">${calculerTotalWonders(c)} pts</div>
+                            </div>
+                            <div class="cat-grid">
+                                <div class="cat-input-group"><label>Merveille</label><input type="number" value="${c.m}" oninput="majWonders(${index}, 'm', this.value)"></div>
+                                <div class="cat-input-group"><label>Pièces</label><input type="number" value="${c.p}" oninput="majWonders(${index}, 'p', this.value)"></div>
+                                <div class="cat-input-group"><label>Militaire</label><input type="number" value="${c.mil}" oninput="majWonders(${index}, 'mil', this.value)"></div>
+                                <div class="cat-input-group"><label>Civil</label><input type="number" value="${c.c}" oninput="majWonders(${index}, 'c', this.value)"></div>
+                                <div class="cat-input-group"><label>Science</label><input type="number" value="${c.s}" oninput="majWonders(${index}, 's', this.value)"></div>
+                                <div class="cat-input-group"><label>Guilde</label><input type="number" value="${c.g}" oninput="majWonders(${index}, 'g', this.value)"></div>
+                            </div>
+                        `;
+                    } else if (jeuSelectionne === 'barbu') {
+                        // Saisie par levées / contrats pour le Barbu
+                        const b = p.barbuCats || { plis:0, coeurs:0, dames:0, roi:0, dernier:0, reussite:0 };
+                        card.innerHTML = `
+                            <div class="player-row-top">
+                                <div class="p-name">${escapeHtml(p.name)}</div>
+                                <div class="p-score" id="score-barbu-total-${index}">${calculerTotalBarbu(b)} pts</div>
+                            </div>
+                            <div class="cat-grid">
+                                <div class="cat-input-group"><label>Sans Plis</label><input type="number" value="${b.plis}" oninput="majBarbu(${index}, 'plis', this.value)"></div>
+                                <div class="cat-input-group"><label>Sans ♥</label><input type="number" value="${b.coeurs}" oninput="majBarbu(${index}, 'coeurs', this.value)"></div>
+                                <div class="cat-input-group"><label>Sans Dames</label><input type="number" value="${b.dames}" oninput="majBarbu(${index}, 'dames', this.value)"></div>
+                                <div class="cat-input-group"><label>Barbu (R♥)</label><input type="number" value="${b.roi}" oninput="majBarbu(${index}, 'roi', this.value)"></div>
+                                <div class="cat-input-group"><label>Dernier Pli</label><input type="number" value="${b.dernier}" oninput="majBarbu(${index}, 'dernier', this.value)"></div>
+                                <div class="cat-input-group"><label>Réussite</label><input type="number" value="${b.reussite}" oninput="majBarbu(${index}, 'reussite', this.value)"></div>
+                            </div>
+                        `;
+                    } else {
+                        let unite = 'pts';
+                        if (jeuSelectionne === 'nimmt') unite = '🦬';
+
+                        let historiqueTxt = p.historique && p.historique.length > 0 ? `<div class="subline">Historique : ${p.historique.join(' ➔ ')}</div>` : `<div class="subline">Aucune manche jouée</div>`;
+
+                        card.innerHTML = `
+                            <div class="player-row-top">
+                                <div>
+                                    <div class="p-name">${escapeHtml(p.name)}</div>
+                                    ${historiqueTxt}
+                                </div>
+                                <div class="p-score" id="score-val-${index}">${p.score} ${unite}</div>
+                            </div>
+                            ${jeuSelectionne === 'scrabble' ? `
+                            <div class="controls-standard" style="margin-top:5px;">
+                                <button class="score-btn minus" onclick="majScoreDirect(${index}, -10)">-10</button>
+                                <button class="score-btn minus" onclick="majScoreDirect(${index}, -1)">-1</button>
+                                <button class="score-btn plus" onclick="majScoreDirect(${index}, 1)">+1</button>
+                                <button class="score-btn plus" onclick="majScoreDirect(${index}, 10)">+10</button>
+                                <button class="score-btn plus" onclick="ajouterPointsScrabble(${index})" style="width: auto; padding: 0 12px; font-size: 0.85rem; background: var(--success); color: white;">+ Mot</button>
+                            </div>` : ''}
+                        `;
+                    }
+                    container.appendChild(card);
+                });
+            }
+        }
+
+        function ouvrirSaisieTour() {
+            const modal = document.getElementById('tourModal');
+            const container = document.getElementById('tourInputsContainer');
+            const title = document.getElementById('tourModalTitle');
+            const sub = document.getElementById('tourModalSub');
+            container.innerHTML = '';
+
+            const players = donneesJeux[jeuSelectionne].players;
+
+            if (jeuSelectionne === 'belote') {
+                title.innerText = "Saisir une donne";
+                sub.innerText = "Entrez les points de chaque équipe sur cette donne :";
+                container.innerHTML = `
+                    <label>${escapeHtml(players[0].name)} :</label>
+                    <input type="number" id="belotePts1" value="0">
+                    <label>${escapeHtml(players[1].name)} :</label>
+                    <input type="number" id="belotePts2" value="0">
+                `;
+            } else if (jeuSelectionne === 'uno') {
+                title.innerText = "Fin de manche Uno";
+                sub.innerText = "Points des cartes en main des perdants (0 pour le gagnant) :";
+                players.forEach((p, idx) => {
+                    container.innerHTML += `
+                        <label>${escapeHtml(p.name)} :</label>
+                        <input type="number" class="tour-input-val" data-index="${idx}" value="0">
+                    `;
+                });
+            } else {
+                title.innerText = "Saisir le tour / manche";
+                sub.innerText = "Entrez les points de ce tour pour chaque participant :";
+                players.forEach((p, idx) => {
+                    container.innerHTML += `
+                        <label>${escapeHtml(p.name)} :</label>
+                        <input type="number" class="tour-input-val" data-index="${idx}" value="0">
+                    `;
+                });
+            }
+
+            modal.classList.add('active');
+        }
+
+        function fermerModalTour() {
+            document.getElementById('tourModal').classList.remove('active');
+        }
+
+        function validerSaisieTour() {
+            const players = donneesJeux[jeuSelectionne].players;
+
+            if (jeuSelectionne === 'belote') {
+                const pts1 = parseInt(document.getElementById('belotePts1').value) || 0;
+                const pts2 = parseInt(document.getElementById('belotePts2').value) || 0;
+
+                players[0].score += pts1;
+                players[0].historique.push(pts1);
+
+                players[1].score += pts2;
+                players[1].historique.push(pts2);
+
+            } else {
+                const inputs = document.querySelectorAll('.tour-input-val');
+                inputs.forEach(input => {
+                    const idx = parseInt(input.dataset.index);
+                    const val = parseInt(input.value) || 0;
+                    players[idx].score += val;
+                    players[idx].historique.push(val);
+                });
+            }
+
+            sauvegarder();
+            fermerModalTour();
+            afficherScores();
+        }
+
+        function ajouterPointsScrabble(index) {
+            const pts = prompt("Entrez le score du mot / tour pour ce joueur :", "0");
+            if (pts !== null && !isNaN(parseInt(pts))) {
+                const p = donneesJeux[jeuSelectionne].players[index];
+                const val = parseInt(pts, 10);
+                p.score += val;
+                p.historique.push(`+${val}`);
+                sauvegarder();
+                afficherScores();
+            }
+        }
+
+        function majScoreDirect(index, delta) {
+            const p = donneesJeux[jeuSelectionne].players[index];
+            p.score = (p.score || 0) + delta;
+            sauvegarder();
+            afficherScores();
+        }
+
+        // --- 7 WONDERS ---
+        function majWonders(index, cat, val) {
+            const p = donneesJeux[jeuSelectionne].players[index];
+            if (!p.categories) p.categories = { m:0, c:0, s:0, mil:0, g:0, p:0 };
+            p.categories[cat] = parseInt(val, 10) || 0;
+            sauvegarder();
+            document.getElementById(`score-total-${index}`).innerText = `${calculerTotalWonders(p.categories)} pts`;
+        }
+
+        function calculerTotalWonders(c) {
+            return (c.m || 0) + (c.p || 0) + (c.mil || 0) + (c.c || 0) + (c.s || 0) + (c.g || 0);
+        }
+
+        // --- LE BARBU ---
+        function majBarbu(index, cat, val) {
+            const p = donneesJeux[jeuSelectionne].players[index];
+            if (!p.barbuCats) p.barbuCats = { plis:0, coeurs:0, dames:0, roi:0, dernier:0, reussite:0 };
+            p.barbuCats[cat] = parseInt(val, 10) || 0;
+            sauvegarder();
+            document.getElementById(`score-barbu-total-${index}`).innerText = `${calculerTotalBarbu(p.barbuCats)} pts`;
+        }
+
+        function calculerTotalBarbu(b) {
+            return (b.plis || 0) + (b.coeurs || 0) + (b.dames || 0) + (b.roi || 0) + (b.dernier || 0) + (b.reussite || 0);
+        }
+
+        function reinitialiserScores() {
+            if (confirm("Remettre les scores à zéro pour ce jeu ?")) {
+                donneesJeux[jeuSelectionne].players.forEach(p => {
+                    p.score = 0;
+                    p.historique = [];
+                    p.categories = { m:0, c:0, s:0, mil:0, g:0, p:0 };
+                    p.barbuCats = { plis:0, coeurs:0, dames:0, roi:0, dernier:0, reussite:0 };
+                });
+                sauvegarder();
+                afficherScores();
+            }
+        }
+
+        function escapeHtml(text) {
+            return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+    </script>
+</body>
+</html>
