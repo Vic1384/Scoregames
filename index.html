@@ -159,7 +159,7 @@
                 <div class="game-pill" data-game="dixit" onclick="cliquerSurJeu('dixit')">✨ Dixit</div>
             </div>
 
-            <h2 id="labelConfigJoueurs" style="margin-top: 20px;">Participants</h2>
+            <h2 id="labelConfigJoueurs" style="margin-top: 20px;">Joueurs</h2>
             <div id="playersInputsContainer"></div>
             <button class="btn btn-secondary" onclick="ajouterChampJoueur()" style="margin-top: 5px; margin-bottom: 15px;">+ Ajouter</button>
 
@@ -223,7 +223,7 @@
     </div>
 
     <script>
-        const STORAGE_KEY = 'scoredesjeux_numeric_v1';
+        const STORAGE_KEY = 'scoredesjeux_numeric_v2';
 
         const NOMS_JEUX = {
             skyjo: 'Skyjo',
@@ -250,7 +250,7 @@
             dixit: { enCours: false, players: [{ name: "Joueur 1", score: 0, historique: [] }, { name: "Joueur 2", score: 0, historique: [] }] },
             ascenseur: { enCours: false, players: [{ name: "Joueur 1", score: 0, historique: [] }, { name: "Joueur 2", score: 0, historique: [] }] },
             barbu: { enCours: false, players: [{ name: "Joueur 1", barbuCats: { plis:0, coeurs:0, dames:0, roi:0, dernier:0, reussite:0 } }, { name: "Joueur 2", barbuCats: { plis:0, coeurs:0, dames:0, roi:0, dernier:0, reussite:0 } }] },
-            timesup: { enCours: false, players: [{ name: "Équipe A", score: 0, historique: [] }, { name: "Équipe B", score: 0, historique: [] }] }
+            timesup: { enCours: false, players: [{ name: "Équipe 1", score: 0, historique: [] }, { name: "Équipe 2", score: 0, historique: [] }] }
         };
 
         let jeuSelectionne = 'skyjo';
@@ -279,7 +279,7 @@
             
             const lbl = document.getElementById('labelConfigJoueurs');
             if (type === 'belote' || type === 'timesup') lbl.innerText = "Équipes";
-            else lbl.innerText = "Participants";
+            else lbl.innerText = "Joueurs";
 
             afficherInputsJoueurs();
             verifierPartieEnCours(type);
@@ -287,8 +287,10 @@
 
         function verifierPartieEnCours(type) {
             if (donneesJeux[type].enCours) {
+                const estEquipe = (type === 'belote' || type === 'timesup');
+                const uniteTexte = estEquipe ? 'équipes' : 'joueurs';
                 document.getElementById('modalTitle').innerText = NOMS_JEUX[type];
-                document.getElementById('modalGameInfo').innerText = `Une partie avec ${donneesJeux[type].players.length} participants est enregistrée.`;
+                document.getElementById('modalGameInfo').innerText = `Une partie avec ${donneesJeux[type].players.length} ${uniteTexte} est enregistrée.`;
                 document.getElementById('choiceModal').classList.add('active');
             }
         }
@@ -301,7 +303,9 @@
         function nouvellePartie() {
             document.getElementById('choiceModal').classList.remove('active');
             donneesJeux[jeuSelectionne].enCours = false;
-            let defaultNames = (jeuSelectionne === 'belote' || jeuSelectionne === 'timesup') ? ["Équipe A", "Équipe B"] : ["Joueur 1", "Joueur 2"];
+            let defaultNames = (jeuSelectionne === 'belote') 
+                ? ["Équipe Nous", "Équipe Eux"] 
+                : (jeuSelectionne === 'timesup' ? ["Équipe 1", "Équipe 2"] : ["Joueur 1", "Joueur 2"]);
             donneesJeux[jeuSelectionne].players = defaultNames.map(name => ({
                 name: name,
                 score: 0,
@@ -317,14 +321,15 @@
             const container = document.getElementById('playersInputsContainer');
             container.innerHTML = '';
             const players = donneesJeux[jeuSelectionne].players;
+            const estEquipe = (jeuSelectionne === 'belote' || jeuSelectionne === 'timesup');
 
             players.forEach((p, index) => {
                 const row = document.createElement('div');
                 row.className = 'player-input-row';
-                let defName = (jeuSelectionne === 'belote' || jeuSelectionne === 'timesup') ? `Équipe ${index + 1}` : `Participant ${index + 1}`;
+                let defName = estEquipe ? `Équipe ${index + 1}` : `Joueur ${index + 1}`;
                 row.innerHTML = `
                     <input type="text" value="${escapeHtml(p.name)}" placeholder="${defName}" oninput="donneesJeux[jeuSelectionne].players[${index}].name = this.value">
-                    ${players.length > ((jeuSelectionne === 'belote' || jeuSelectionne === 'timesup') ? 2 : 1) ? `<button class="btn-icon" onclick="supprimerJoueur(${index})">✕</button>` : ''}
+                    ${players.length > (estEquipe ? 2 : 1) ? `<button class="btn-icon" onclick="supprimerJoueur(${index})">✕</button>` : ''}
                 `;
                 container.appendChild(row);
             });
@@ -332,12 +337,13 @@
 
         function ajouterChampJoueur() {
             const players = donneesJeux[jeuSelectionne].players;
-            if ((jeuSelectionne === 'belote' || jeuSelectionne === 'timesup') && players.length >= 4) {
+            const estEquipe = (jeuSelectionne === 'belote' || jeuSelectionne === 'timesup');
+            if (estEquipe && players.length >= 4) {
                 alert("Ce jeu se joue généralement à 2 ou 4 équipes max.");
                 return;
             }
             players.push({
-                name: (jeuSelectionne === 'belote' || jeuSelectionne === 'timesup') ? `Équipe ${players.length + 1}` : `Participant ${players.length + 1}`,
+                name: estEquipe ? `Équipe ${players.length + 1}` : `Joueur ${players.length + 1}`,
                 score: 0,
                 historique: [],
                 categories: { m:0, c:0, s:0, mil:0, g:0, p:0 },
@@ -348,15 +354,17 @@
 
         function supprimerJoueur(index) {
             const players = donneesJeux[jeuSelectionne].players;
-            if (players.length > ((jeuSelectionne === 'belote' || jeuSelectionne === 'timesup') ? 2 : 1)) {
+            const estEquipe = (jeuSelectionne === 'belote' || jeuSelectionne === 'timesup');
+            if (players.length > (estEquipe ? 2 : 1)) {
                 players.splice(index, 1);
                 afficherInputsJoueurs();
             }
         }
 
         function lancerLaPartie() {
+            const estEquipe = (jeuSelectionne === 'belote' || jeuSelectionne === 'timesup');
             donneesJeux[jeuSelectionne].players.forEach((p, i) => {
-                if (!p.name || !p.name.trim()) p.name = `Participant ${i + 1}`;
+                if (!p.name || !p.name.trim()) p.name = estEquipe ? `Équipe ${i + 1}` : `Joueur ${i + 1}`;
             });
             donneesJeux[jeuSelectionne].enCours = true;
             sauvegarder();
@@ -570,8 +578,9 @@
                     `;
                 });
             } else {
+                const estEquipe = (jeuSelectionne === 'timesup');
                 title.innerText = "Saisir le tour / manche";
-                sub.innerText = "Entrez les points de ce tour pour chaque participant :";
+                sub.innerText = `Entrez les points de ce tour pour chaque ${estEquipe ? 'équipe' : 'joueur'} :`;
                 players.forEach((p, idx) => {
                     container.innerHTML += `
                         <label>${escapeHtml(p.name)} :</label>
