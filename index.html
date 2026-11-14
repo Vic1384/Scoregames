@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ScoreLudik Pro</title>
+    <title>Score des jeux</title>
     <style>
         :root {
             --bg: #0f172a;
@@ -14,6 +14,7 @@
             --primary: #6366f1;
             --success: #10b981;
             --danger: #f43f5e;
+            --warning: #f59e0b;
             
             --skyjo: linear-gradient(135deg, #0ea5e9, #0369a1);
             --nimmt: linear-gradient(135deg, #f59e0b, #b45309);
@@ -25,6 +26,7 @@
             --dixit: linear-gradient(135deg, #d946ef, #a21caf);
             --ascenseur: linear-gradient(135deg, #14b8a6, #0f766e);
             --barbu: linear-gradient(135deg, #f97316, #c2410c);
+            --timesup: linear-gradient(135deg, #8b5cf6, #ec4899);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -40,6 +42,7 @@
         .view.active { display: flex; }
 
         h2 { font-size: 1.1rem; margin-bottom: 12px; color: var(--text); font-weight: 700; }
+        .section-title { font-size: 0.85rem; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; margin: 15px 0 8px 4px; }
         label { font-size: 0.8rem; font-weight: 600; color: var(--text-light); display: block; margin-bottom: 4px; }
         
         input, select { width: 100%; padding: 14px; border: 1px solid var(--card-border); border-radius: 12px; font-size: 1rem; outline: none; background: #0f172a; color: white; margin-bottom: 10px; }
@@ -50,9 +53,10 @@
         .btn-danger { background: var(--danger); box-shadow: 0 4px 12px rgba(244, 63, 94, 0.4); }
         .btn-secondary { background: #334155; color: #cbd5e1; box-shadow: none; }
         .btn-success { background: var(--success); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); }
+        .btn-warning { background: var(--warning); box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4); color: white; }
 
-        .game-selector { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
-        .game-pill { padding: 14px 10px; border-radius: 14px; background: #0f172a; font-weight: 700; font-size: 0.9rem; cursor: pointer; text-align: center; color: var(--text-light); border: 2px solid var(--card-border); transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .game-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 5px; }
+        .game-pill { padding: 12px 10px; border-radius: 12px; background: #0f172a; font-weight: 700; font-size: 0.85rem; cursor: pointer; text-align: center; color: var(--text-light); border: 2px solid var(--card-border); transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .game-pill.active { border-color: transparent; color: white; box-shadow: 0 6px 15px rgba(0,0,0,0.4); transform: translateY(-2px); }
         
         .game-pill.active[data-game="skyjo"] { background: var(--skyjo); }
@@ -65,6 +69,7 @@
         .game-pill.active[data-game="dixit"] { background: var(--dixit); }
         .game-pill.active[data-game="ascenseur"] { background: var(--ascenseur); }
         .game-pill.active[data-game="barbu"] { background: var(--barbu); }
+        .game-pill.active[data-game="timesup"] { background: var(--timesup); }
 
         .player-input-row { display: flex; gap: 8px; margin-bottom: 8px; }
         .player-input-row input { margin-bottom: 0; }
@@ -83,27 +88,27 @@
         .badge-dixit { background: var(--dixit); }
         .badge-ascenseur { background: var(--ascenseur); }
         .badge-barbu { background: var(--barbu); }
+        .badge-timesup { background: var(--timesup); }
 
         .player-score-card { background: #0f172a; padding: 16px; border-radius: 16px; margin-bottom: 12px; border: 1px solid var(--card-border); display: flex; flex-direction: column; gap: 8px; }
         .player-row-top { display: flex; justify-content: space-between; align-items: center; }
         .p-name { font-weight: 700; font-size: 1.1rem; color: #f1f5f9; }
         .p-score { font-size: 1.5rem; font-weight: 900; color: #818cf8; }
 
-        .controls-standard { display: flex; gap: 6px; align-items: center; justify-content: flex-end; }
-        .score-btn { width: 40px; height: 40px; border-radius: 10px; border: none; font-size: 1rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .score-btn.plus { background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
-        .score-btn.minus { background: rgba(244, 63, 94, 0.15); color: var(--danger); border: 1px solid rgba(244, 63, 94, 0.3); }
-
         .belote-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; background: #1e293b; border-radius: 12px; overflow: hidden; border: 1px solid var(--card-border); }
         .belote-table th, .belote-table td { padding: 10px 12px; text-align: center; border-bottom: 1px solid var(--card-border); }
         .belote-table th { background: #0f172a; font-weight: 700; color: var(--text-light); }
         .belote-table tr:last-child td { border-bottom: none; }
 
-        /* Grilles multi-critères (7 Wonders & Barbu) */
         .cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 5px; }
         .cat-input-group { background: #1e293b; padding: 8px; border-radius: 10px; border: 1px solid var(--card-border); text-align: center; }
         .cat-input-group label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; margin-bottom: 2px; color: var(--text-light); }
         .cat-input-group input { width: 100%; padding: 4px; text-align: center; font-size: 0.95rem; border: none; font-weight: bold; margin-bottom: 0; background: transparent; color: white; }
+
+        .podium-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #0f172a; border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--card-border); font-weight: 700; }
+        .podium-item:nth-child(1) { border-color: #fbbf24; background: rgba(251, 191, 36, 0.1); }
+        .podium-item:nth-child(2) { border-color: #94a3b8; }
+        .podium-item:nth-child(3) { border-color: #d97706; }
 
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; backdrop-filter: blur(8px); }
         .modal-overlay.active { display: flex; }
@@ -112,34 +117,49 @@
         .modal p { color: var(--text-light); font-size: 0.9rem; margin-bottom: 20px; }
         .modal-buttons { display: flex; flex-direction: column; gap: 10px; }
 
-        .actions-bottom { display: flex; gap: 10px; margin-top: 15px; }
+        .actions-bottom { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
         .subline { font-size: 0.75rem; color: var(--text-light); }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>ScoreLudik Pro</h1>
+        <h1>Score des jeux</h1>
     </header>
 
     <!-- VUE 1 : CONFIGURATION -->
     <div id="setupView" class="view active">
         <div class="card">
             <h2>Choisissez un jeu</h2>
-            <div class="game-selector">
+
+            <div class="section-title">Cartes & Plis</div>
+            <div class="game-grid">
                 <div class="game-pill active" data-game="skyjo" onclick="cliquerSurJeu('skyjo')">🃏 Skyjo</div>
-                <div class="game-pill" data-game="nimmt" onclick="cliquerSurJeu('nimmt')">🐂 6 qui prend</div>
-                <div class="game-pill" data-game="wonders" onclick="cliquerSurJeu('wonders')">🏛️ 7 Wonders</div>
                 <div class="game-pill" data-game="belote" onclick="cliquerSurJeu('belote')">🎯 Belote</div>
-                <div class="game-pill" data-game="scrabble" onclick="cliquerSurJeu('scrabble')">🔠 Scrabble</div>
-                <div class="game-pill" data-game="uno" onclick="cliquerSurJeu('uno')">🚫 Uno</div>
-                <div class="game-pill" data-game="president" onclick="cliquerSurJeu('president')">👑 Président</div>
-                <div class="game-pill" data-game="dixit" onclick="cliquerSurJeu('dixit')">✨ Dixit</div>
-                <div class="game-pill" data-game="ascenseur" onclick="cliquerSurJeu('ascenseur')">📈 Ascenseur</div>
                 <div class="game-pill" data-game="barbu" onclick="cliquerSurJeu('barbu')">🧔 Barbu</div>
+                <div class="game-pill" data-game="president" onclick="cliquerSurJeu('president')">👑 Président</div>
+                <div class="game-pill" data-game="ascenseur" onclick="cliquerSurJeu('ascenseur')">📈 Ascenseur</div>
             </div>
 
-            <h2 id="labelConfigJoueurs">Participants</h2>
+            <div class="section-title">Défausse & Chiffres</div>
+            <div class="game-grid">
+                <div class="game-pill" data-game="nimmt" onclick="cliquerSurJeu('nimmt')">🐂 6 qui prend</div>
+                <div class="game-pill" data-game="uno" onclick="cliquerSurJeu('uno')">🚫 Uno</div>
+            </div>
+
+            <div class="section-title">Plateau & Stratégie</div>
+            <div class="game-grid">
+                <div class="game-pill" data-game="wonders" onclick="cliquerSurJeu('wonders')">🏛️ 7 Wonders</div>
+                <div class="game-pill" data-game="scrabble" onclick="cliquerSurJeu('scrabble')">🔠 Scrabble</div>
+            </div>
+
+            <div class="section-title">Ambiance</div>
+            <div class="game-grid">
+                <div class="game-pill" data-game="timesup" onclick="cliquerSurJeu('timesup')">⏱️ Time's Up</div>
+                <div class="game-pill" data-game="dixit" onclick="cliquerSurJeu('dixit')">✨ Dixit</div>
+            </div>
+
+            <h2 id="labelConfigJoueurs" style="margin-top: 20px;">Participants</h2>
             <div id="playersInputsContainer"></div>
             <button class="btn btn-secondary" onclick="ajouterChampJoueur()" style="margin-top: 5px; margin-bottom: 15px;">+ Ajouter</button>
 
@@ -159,7 +179,20 @@
 
             <div class="actions-bottom">
                 <button class="btn btn-success" onclick="ouvrirSaisieTour()" id="btnActionManche">+ Ajouter une manche / tour</button>
+                <button class="btn btn-warning" onclick="ouvrirPodium()">🏆 Fin de la partie (Classement)</button>
                 <button class="btn btn-danger" onclick="reinitialiserScores()" style="font-size: 0.9rem; padding: 12px;">Réinitialiser</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE CLASSEMENT / PODIUM -->
+    <div id="podiumModal" class="modal-overlay">
+        <div class="modal">
+            <h3>🏆 Classement Final</h3>
+            <p id="podiumSub" class="subline">Voici les résultats de la partie</p>
+            <div id="podiumListContainer" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; text-align: left;"></div>
+            <div class="modal-buttons">
+                <button class="btn" onclick="fermerModalPodium()">Fermer</button>
             </div>
         </div>
     </div>
@@ -190,7 +223,7 @@
     </div>
 
     <script>
-        const STORAGE_KEY = 'scoreludik_pro_barbu_v3';
+        const STORAGE_KEY = 'scoredesjeux_numeric_v1';
 
         const NOMS_JEUX = {
             skyjo: 'Skyjo',
@@ -202,7 +235,8 @@
             president: 'Le Président',
             dixit: 'Dixit',
             ascenseur: 'L’Ascenseur',
-            barbu: 'Le Barbu'
+            barbu: 'Le Barbu',
+            timesup: 'Time’s Up'
         };
 
         let donneesJeux = {
@@ -215,13 +249,8 @@
             president: { enCours: false, players: [{ name: "Joueur 1", score: 0, historique: [] }, { name: "Joueur 2", score: 0, historique: [] }] },
             dixit: { enCours: false, players: [{ name: "Joueur 1", score: 0, historique: [] }, { name: "Joueur 2", score: 0, historique: [] }] },
             ascenseur: { enCours: false, players: [{ name: "Joueur 1", score: 0, historique: [] }, { name: "Joueur 2", score: 0, historique: [] }] },
-            barbu: { 
-                enCours: false, 
-                players: [
-                    { name: "Joueur 1", barbuCats: { plis:0, coeurs:0, dames:0, roi:0, dernier:0, reussite:0 } }, 
-                    { name: "Joueur 2", barbuCats: { plis:0, coeurs:0, dames:0, roi:0, dernier:0, reussite:0 } }
-                ] 
-            }
+            barbu: { enCours: false, players: [{ name: "Joueur 1", barbuCats: { plis:0, coeurs:0, dames:0, roi:0, dernier:0, reussite:0 } }, { name: "Joueur 2", barbuCats: { plis:0, coeurs:0, dames:0, roi:0, dernier:0, reussite:0 } }] },
+            timesup: { enCours: false, players: [{ name: "Équipe A", score: 0, historique: [] }, { name: "Équipe B", score: 0, historique: [] }] }
         };
 
         let jeuSelectionne = 'skyjo';
@@ -231,7 +260,7 @@
             if (saved) {
                 try {
                     const parsed = JSON.parse(saved);
-                    if (parsed.skyjo && parsed.barbu) donneesJeux = parsed;
+                    if (parsed.skyjo && parsed.timesup) donneesJeux = parsed;
                 } catch (e) {}
             }
             afficherInputsJoueurs();
@@ -249,7 +278,7 @@
             });
             
             const lbl = document.getElementById('labelConfigJoueurs');
-            if (type === 'belote') lbl.innerText = "Équipes";
+            if (type === 'belote' || type === 'timesup') lbl.innerText = "Équipes";
             else lbl.innerText = "Participants";
 
             afficherInputsJoueurs();
@@ -272,7 +301,7 @@
         function nouvellePartie() {
             document.getElementById('choiceModal').classList.remove('active');
             donneesJeux[jeuSelectionne].enCours = false;
-            let defaultNames = jeuSelectionne === 'belote' ? ["Équipe Nous", "Équipe Eux"] : ["Joueur 1", "Joueur 2"];
+            let defaultNames = (jeuSelectionne === 'belote' || jeuSelectionne === 'timesup') ? ["Équipe A", "Équipe B"] : ["Joueur 1", "Joueur 2"];
             donneesJeux[jeuSelectionne].players = defaultNames.map(name => ({
                 name: name,
                 score: 0,
@@ -292,10 +321,10 @@
             players.forEach((p, index) => {
                 const row = document.createElement('div');
                 row.className = 'player-input-row';
-                let defName = jeuSelectionne === 'belote' ? `Équipe ${index + 1}` : `Participant ${index + 1}`;
+                let defName = (jeuSelectionne === 'belote' || jeuSelectionne === 'timesup') ? `Équipe ${index + 1}` : `Participant ${index + 1}`;
                 row.innerHTML = `
                     <input type="text" value="${escapeHtml(p.name)}" placeholder="${defName}" oninput="donneesJeux[jeuSelectionne].players[${index}].name = this.value">
-                    ${players.length > (jeuSelectionne === 'belote' ? 2 : 1) ? `<button class="btn-icon" onclick="supprimerJoueur(${index})">✕</button>` : ''}
+                    ${players.length > ((jeuSelectionne === 'belote' || jeuSelectionne === 'timesup') ? 2 : 1) ? `<button class="btn-icon" onclick="supprimerJoueur(${index})">✕</button>` : ''}
                 `;
                 container.appendChild(row);
             });
@@ -303,12 +332,12 @@
 
         function ajouterChampJoueur() {
             const players = donneesJeux[jeuSelectionne].players;
-            if (jeuSelectionne === 'belote' && players.length >= 2) {
-                alert("La belote se joue à 2 équipes.");
+            if ((jeuSelectionne === 'belote' || jeuSelectionne === 'timesup') && players.length >= 4) {
+                alert("Ce jeu se joue généralement à 2 ou 4 équipes max.");
                 return;
             }
             players.push({
-                name: jeuSelectionne === 'belote' ? `Équipe ${players.length + 1}` : `Participant ${players.length + 1}`,
+                name: (jeuSelectionne === 'belote' || jeuSelectionne === 'timesup') ? `Équipe ${players.length + 1}` : `Participant ${players.length + 1}`,
                 score: 0,
                 historique: [],
                 categories: { m:0, c:0, s:0, mil:0, g:0, p:0 },
@@ -319,7 +348,7 @@
 
         function supprimerJoueur(index) {
             const players = donneesJeux[jeuSelectionne].players;
-            if (players.length > (jeuSelectionne === 'belote' ? 2 : 1)) {
+            if (players.length > ((jeuSelectionne === 'belote' || jeuSelectionne === 'timesup') ? 2 : 1)) {
                 players.splice(index, 1);
                 afficherInputsJoueurs();
             }
@@ -356,6 +385,7 @@
                 else if (jeuSelectionne === 'president') btnManche.innerText = '+ Saisir une manche Président';
                 else if (jeuSelectionne === 'dixit') btnManche.innerText = '+ Saisir les points Dixit';
                 else if (jeuSelectionne === 'ascenseur') btnManche.innerText = '+ Saisir un tour Ascenseur';
+                else if (jeuSelectionne === 'timesup') btnManche.innerText = '+ Saisir les points par manche';
             }
 
             afficherScores();
@@ -415,16 +445,15 @@
                                 <div class="p-score" id="score-total-${index}">${calculerTotalWonders(c)} pts</div>
                             </div>
                             <div class="cat-grid">
-                                <div class="cat-input-group"><label>Merveille</label><input type="number" value="${c.m}" oninput="majWonders(${index}, 'm', this.value)"></div>
-                                <div class="cat-input-group"><label>Pièces</label><input type="number" value="${c.p}" oninput="majWonders(${index}, 'p', this.value)"></div>
-                                <div class="cat-input-group"><label>Militaire</label><input type="number" value="${c.mil}" oninput="majWonders(${index}, 'mil', this.value)"></div>
-                                <div class="cat-input-group"><label>Civil</label><input type="number" value="${c.c}" oninput="majWonders(${index}, 'c', this.value)"></div>
-                                <div class="cat-input-group"><label>Science</label><input type="number" value="${c.s}" oninput="majWonders(${index}, 's', this.value)"></div>
-                                <div class="cat-input-group"><label>Guilde</label><input type="number" value="${c.g}" oninput="majWonders(${index}, 'g', this.value)"></div>
+                                <div class="cat-input-group"><label>Merveille</label><input type="number" inputmode="numeric" pattern="[0-9]*" value="${c.m}" oninput="majWonders(${index}, 'm', this.value)"></div>
+                                <div class="cat-input-group"><label>Pièces</label><input type="number" inputmode="numeric" pattern="[0-9]*" value="${c.p}" oninput="majWonders(${index}, 'p', this.value)"></div>
+                                <div class="cat-input-group"><label>Militaire</label><input type="number" inputmode="numeric" pattern="[0-9]*" value="${c.mil}" oninput="majWonders(${index}, 'mil', this.value)"></div>
+                                <div class="cat-input-group"><label>Civil</label><input type="number" inputmode="numeric" pattern="[0-9]*" value="${c.c}" oninput="majWonders(${index}, 'c', this.value)"></div>
+                                <div class="cat-input-group"><label>Science</label><input type="number" inputmode="numeric" pattern="[0-9]*" value="${c.s}" oninput="majWonders(${index}, 's', this.value)"></div>
+                                <div class="cat-input-group"><label>Guilde</label><input type="number" inputmode="numeric" pattern="[0-9]*" value="${c.g}" oninput="majWonders(${index}, 'g', this.value)"></div>
                             </div>
                         `;
                     } else if (jeuSelectionne === 'barbu') {
-                        // Saisie par levées / contrats pour le Barbu
                         const b = p.barbuCats || { plis:0, coeurs:0, dames:0, roi:0, dernier:0, reussite:0 };
                         card.innerHTML = `
                             <div class="player-row-top">
@@ -432,12 +461,12 @@
                                 <div class="p-score" id="score-barbu-total-${index}">${calculerTotalBarbu(b)} pts</div>
                             </div>
                             <div class="cat-grid">
-                                <div class="cat-input-group"><label>Sans Plis</label><input type="number" value="${b.plis}" oninput="majBarbu(${index}, 'plis', this.value)"></div>
-                                <div class="cat-input-group"><label>Sans ♥</label><input type="number" value="${b.coeurs}" oninput="majBarbu(${index}, 'coeurs', this.value)"></div>
-                                <div class="cat-input-group"><label>Sans Dames</label><input type="number" value="${b.dames}" oninput="majBarbu(${index}, 'dames', this.value)"></div>
-                                <div class="cat-input-group"><label>Barbu (R♥)</label><input type="number" value="${b.roi}" oninput="majBarbu(${index}, 'roi', this.value)"></div>
-                                <div class="cat-input-group"><label>Dernier Pli</label><input type="number" value="${b.dernier}" oninput="majBarbu(${index}, 'dernier', this.value)"></div>
-                                <div class="cat-input-group"><label>Réussite</label><input type="number" value="${b.reussite}" oninput="majBarbu(${index}, 'reussite', this.value)"></div>
+                                <div class="cat-input-group"><label>Sans Plis</label><input type="number" inputmode="numeric" pattern="[0-9]*" value="${b.plis}" oninput="majBarbu(${index}, 'plis', this.value)"></div>
+                                <div class="cat-input-group"><label>Sans ♥</label><input type="number" inputmode="numeric" pattern="[0-9]*" value="${b.coeurs}" oninput="majBarbu(${index}, 'coeurs', this.value)"></div>
+                                <div class="cat-input-group"><label>Sans Dames</label><input type="number" inputmode="numeric" pattern="[0-9]*" value="${b.dames}" oninput="majBarbu(${index}, 'dames', this.value)"></div>
+                                <div class="cat-input-group"><label>Barbu (R♥)</label><input type="number" inputmode="numeric" pattern="[0-9]*" value="${b.roi}" oninput="majBarbu(${index}, 'roi', this.value)"></div>
+                                <div class="cat-input-group"><label>Dernier Pli</label><input type="number" inputmode="numeric" pattern="[0-9]*" value="${b.dernier}" oninput="majBarbu(${index}, 'dernier', this.value)"></div>
+                                <div class="cat-input-group"><label>Réussite</label><input type="number" inputmode="numeric" pattern="[0-9]*" value="${b.reussite}" oninput="majBarbu(${index}, 'reussite', this.value)"></div>
                             </div>
                         `;
                     } else {
@@ -455,18 +484,62 @@
                                 <div class="p-score" id="score-val-${index}">${p.score} ${unite}</div>
                             </div>
                             ${jeuSelectionne === 'scrabble' ? `
-                            <div class="controls-standard" style="margin-top:5px;">
-                                <button class="score-btn minus" onclick="majScoreDirect(${index}, -10)">-10</button>
-                                <button class="score-btn minus" onclick="majScoreDirect(${index}, -1)">-1</button>
-                                <button class="score-btn plus" onclick="majScoreDirect(${index}, 1)">+1</button>
-                                <button class="score-btn plus" onclick="majScoreDirect(${index}, 10)">+10</button>
-                                <button class="score-btn plus" onclick="ajouterPointsScrabble(${index})" style="width: auto; padding: 0 12px; font-size: 0.85rem; background: var(--success); color: white;">+ Mot</button>
+                            <div class="controls-standard" style="margin-top:5px; display:flex; gap:6px; justify-content:flex-end;">
+                                <button class="score-btn minus" onclick="majScoreDirect(${index}, -10)" style="width:40px;height:40px;background:rgba(244,63,94,0.15);color:var(--danger);border:1px solid rgba(244,63,94,0.3);border-radius:10px;font-weight:bold;cursor:pointer;">-10</button>
+                                <button class="score-btn minus" onclick="majScoreDirect(${index}, -1)" style="width:40px;height:40px;background:rgba(244,63,94,0.15);color:var(--danger);border:1px solid rgba(244,63,94,0.3);border-radius:10px;font-weight:bold;cursor:pointer;">-1</button>
+                                <button class="score-btn plus" onclick="majScoreDirect(${index}, 1)" style="width:40px;height:40px;background:rgba(16,185,129,0.15);color:var(--success);border:1px solid rgba(16,185,129,0.3);border-radius:10px;font-weight:bold;cursor:pointer;">+1</button>
+                                <button class="score-btn plus" onclick="majScoreDirect(${index}, 10)" style="width:40px;height:40px;background:rgba(16,185,129,0.15);color:var(--success);border:1px solid rgba(16,185,129,0.3);border-radius:10px;font-weight:bold;cursor:pointer;">+10</button>
+                                <button class="score-btn plus" onclick="ajouterPointsScrabble(${index})" style="width:auto;padding:0 12px;height:40px;background:var(--success);color:white;border:none;border-radius:10px;font-weight:bold;cursor:pointer;">+ Mot</button>
                             </div>` : ''}
                         `;
                     }
                     container.appendChild(card);
                 });
             }
+        }
+
+        function ouvrirPodium() {
+            const modal = document.getElementById('podiumModal');
+            const container = document.getElementById('podiumListContainer');
+            container.innerHTML = '';
+
+            let playersCopy = JSON.parse(JSON.stringify(donneesJeux[jeuSelectionne].players));
+
+            playersCopy.forEach((p, idx) => {
+                if (jeuSelectionne === 'wonders') {
+                    p.finalScore = calculerTotalWonders(p.categories);
+                } else if (jeuSelectionne === 'barbu') {
+                    p.finalScore = calculerTotalBarbu(p.barbuCats);
+                } else {
+                    p.finalScore = p.score || 0;
+                }
+            });
+
+            if (jeuSelectionne === 'skyjo' || jeuSelectionne === 'nimmt') {
+                playersCopy.sort((a, b) => a.finalScore - b.finalScore);
+            } else {
+                playersCopy.sort((a, b) => b.finalScore - a.finalScore);
+            }
+
+            playersCopy.forEach((p, idx) => {
+                let medaille = `#${idx + 1}`;
+                if (idx === 0) medaille = '🥇';
+                else if (idx === 1) medaille = '🥈';
+                else if (idx === 2) medaille = '🥉';
+
+                container.innerHTML += `
+                    <div class="podium-item">
+                        <div><span style="font-size:1.2rem; margin-right:10px;">${medaille}</span> ${escapeHtml(p.name)}</div>
+                        <div style="font-size:1.2rem; font-weight:900; color:#818cf8;">${p.finalScore} pts</div>
+                    </div>
+                `;
+            });
+
+            modal.classList.add('active');
+        }
+
+        function fermerModalPodium() {
+            document.getElementById('podiumModal').classList.remove('active');
         }
 
         function ouvrirSaisieTour() {
@@ -483,9 +556,9 @@
                 sub.innerText = "Entrez les points de chaque équipe sur cette donne :";
                 container.innerHTML = `
                     <label>${escapeHtml(players[0].name)} :</label>
-                    <input type="number" id="belotePts1" value="0">
+                    <input type="number" inputmode="numeric" pattern="[0-9]*" id="belotePts1" value="0">
                     <label>${escapeHtml(players[1].name)} :</label>
-                    <input type="number" id="belotePts2" value="0">
+                    <input type="number" inputmode="numeric" pattern="[0-9]*" id="belotePts2" value="0">
                 `;
             } else if (jeuSelectionne === 'uno') {
                 title.innerText = "Fin de manche Uno";
@@ -493,7 +566,7 @@
                 players.forEach((p, idx) => {
                     container.innerHTML += `
                         <label>${escapeHtml(p.name)} :</label>
-                        <input type="number" class="tour-input-val" data-index="${idx}" value="0">
+                        <input type="number" inputmode="numeric" pattern="[0-9]*" class="tour-input-val" data-index="${idx}" value="0">
                     `;
                 });
             } else {
@@ -502,7 +575,7 @@
                 players.forEach((p, idx) => {
                     container.innerHTML += `
                         <label>${escapeHtml(p.name)} :</label>
-                        <input type="number" class="tour-input-val" data-index="${idx}" value="0">
+                        <input type="number" inputmode="numeric" pattern="[0-9]*" class="tour-input-val" data-index="${idx}" value="0">
                     `;
                 });
             }
@@ -543,7 +616,7 @@
         }
 
         function ajouterPointsScrabble(index) {
-            const pts = prompt("Entrez le score du mot / tour pour ce joueur :", "0");
+            let pts = prompt("Entrez le score du mot / tour pour ce joueur :", "0");
             if (pts !== null && !isNaN(parseInt(pts))) {
                 const p = donneesJeux[jeuSelectionne].players[index];
                 const val = parseInt(pts, 10);
@@ -561,7 +634,6 @@
             afficherScores();
         }
 
-        // --- 7 WONDERS ---
         function majWonders(index, cat, val) {
             const p = donneesJeux[jeuSelectionne].players[index];
             if (!p.categories) p.categories = { m:0, c:0, s:0, mil:0, g:0, p:0 };
@@ -574,7 +646,6 @@
             return (c.m || 0) + (c.p || 0) + (c.mil || 0) + (c.c || 0) + (c.s || 0) + (c.g || 0);
         }
 
-        // --- LE BARBU ---
         function majBarbu(index, cat, val) {
             const p = donneesJeux[jeuSelectionne].players[index];
             if (!p.barbuCats) p.barbuCats = { plis:0, coeurs:0, dames:0, roi:0, dernier:0, reussite:0 };
